@@ -20,7 +20,7 @@ class Console:
     MODULES = (
         "注册",
         "农业",
-        "完成任务",
+        "任务",
         "重新验证账户",
         "导出统计",
         "退出",
@@ -30,7 +30,7 @@ class Console:
         "农业": "farm",
         "退出": "exit",
         "导出统计": "export_stats",
-        "完成任务": "complete_tasks",
+        "任务": "complete_tasks",
         "重新验证账户": "re_verify_accounts",
     }
 
