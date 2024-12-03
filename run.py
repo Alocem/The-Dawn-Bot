@@ -26,13 +26,13 @@ async def run_module_safe(
             if config.delay_before_start.min > 0:
                 if process_func == process_farming and account.email not in accounts_with_initial_delay:
                     random_delay = random.randint(config.delay_before_start.min, config.delay_before_start.max)
-                    logger.info(f"Account: {account.email} | Initial farming delay: {random_delay} sec")
+                    logger.info(f"账户: {account.email} | 初始farm延迟: {random_delay} 秒")
                     await asyncio.sleep(random_delay)
                     accounts_with_initial_delay.add(account.email)
 
                 elif process_func != process_farming:
                     random_delay = random.randint(config.delay_before_start.min, config.delay_before_start.max)
-                    logger.info(f"Account: {account.email} | Sleep for {random_delay} sec")
+                    logger.info(f"账户: {account.email} | 睡眠 {random_delay} 秒")
                     await asyncio.sleep(random_delay)
 
             result = await process_func(bot)
@@ -43,12 +43,12 @@ async def run_module_safe(
 
 async def process_registration(bot: Bot) -> None:
     operation_result = await bot.process_registration()
-    await file_operations.export_result(operation_result, "register")
+    await file_operations.export_result(operation_result, "注册")
 
 
 async def process_re_verify_accounts(bot: Bot) -> None:
     operation_result = await bot.process_reverify_email()
-    await file_operations.export_result(operation_result, "re-verify")
+    await file_operations.export_result(operation_result, "重新验证")
 
 
 async def process_farming(bot: Bot) -> None:
@@ -62,7 +62,7 @@ async def process_export_stats(bot: Bot) -> None:
 
 async def process_complete_tasks(bot: Bot) -> None:
     operation_result = await bot.process_complete_tasks()
-    await file_operations.export_result(operation_result, "tasks")
+    await file_operations.export_result(operation_result, "任务")
 
 
 async def run_module(
@@ -101,20 +101,20 @@ async def run() -> None:
         Console().build()
 
         if config.module not in module_map:
-            logger.error(f"Unknown module: {config.module}")
+            logger.error(f"未知模块: {config.module}")
             break
 
         accounts, process_func = module_map[config.module]
 
         if not accounts:
-            logger.error(f"No accounts for {config.module}")
+            logger.error(f"{config.module} 没有账户")
             break
 
         if config.module == "farm":
             await process_func(accounts)
         else:
             await run_module(accounts, process_func)
-            input("\n\nPress Enter to continue...")
+            input("\n\n按 Enter 继续...")
 
 
 if __name__ == "__main__":
