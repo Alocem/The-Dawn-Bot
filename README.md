@@ -1,4 +1,4 @@
-# 🌅 Dawn扩展机器人 [v1.6]
+# 🌅 Dawn扩展机器人 [v1.6] 需要使用2cap解决方案 链接：https://2captcha.com/?from=24616683
 
 <div align="center">
   <img src="./console/images/console.png" alt="黎明扩展机器人控制台" width="600"/>
@@ -39,15 +39,9 @@
   - 📋 未验证账户监控
   
 - 🔒 **安全**
-  - 🧩吉| 科尔沁左翼中旗| 河池| 安西| 石台| 平湖| 金川| 盐山| 义县| 望江| 长治市| 祁东| 祁门| 平和| 永济| 旅顺口| 平湖| 阜新市| 安顺| 旬邑| 永靖| 乌拉特中旗| 孟津| 余干| 郎溪| 宿州| 富锦| 临澧| 乌马河| 阿瓦提| 长治市| 阿图什| 五原| 福安| 泾阳  1.0.0  2015-12-27
- * @version 1.0.0 2015-12-27
- * @param {string}  str 需要进行base64解码的字符串
- * @return {string} 解码后的字符串
- */
-function decode(str) {
-    return decodeURIComponent(escape(window.atob(str)));
-}
-```
+  - 🧩 **高级验证码解决集成**
+  - 🌐 **代理支持 (HTTP/SOCKS5)**
+  - 🔐 **安全的电子邮件集成**
 
 ## ⚠️ 重要提示
 
