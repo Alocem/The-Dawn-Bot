@@ -28,10 +28,10 @@ def read_file(
     file_path: str, check_empty: bool = True, is_yaml: bool = False
 ) -> List[str] | Dict:
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
+        raise FileNotFoundError(f"文件未找到: {file_path}")
 
     if check_empty and os.stat(file_path).st_size == 0:
-        raise ValueError(f"File is empty: {file_path}")
+        raise ValueError(f"文件为空: {file_path}")
 
     if is_yaml:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -45,7 +45,7 @@ def get_params() -> Dict:
     data = read_file(CONFIG_PARAMS, is_yaml=True)
     missing_fields = set(REQUIRED_PARAMS_FIELDS) - set(data.keys())
     if missing_fields:
-        raise ValueError(f"Missing fields in config file: {', '.join(missing_fields)}")
+        raise ValueError(f"配置文件中缺少字段: {', '.join(missing_fields)}")
     return data
 
 
@@ -56,7 +56,7 @@ def get_proxies() -> List[Proxy]:
         )
         return [Proxy.from_str(line) for line in proxies] if proxies else []
     except Exception as exc:
-        raise ValueError(f"Failed to parse proxy: {exc}")
+        raise ValueError(f"代理解析失败: {exc}")
 
 
 def get_accounts(file_name: str, redirect_mode: bool = False) -> Generator[Account, None, None]:
@@ -87,7 +87,7 @@ def get_accounts(file_name: str, redirect_mode: bool = False) -> Generator[Accou
                 else:
                     splits = account.split(":", 1)
                     if len(splits) != 2:
-                        raise ValueError(f"Invalid account format: {account}")
+                        raise ValueError(f"账户格式无效: {account}")
 
                     email, password = splits
                     yield Account(
@@ -98,10 +98,10 @@ def get_accounts(file_name: str, redirect_mode: bool = False) -> Generator[Accou
 
             except Exception as e:
                 if not redirect_mode:
-                    raise ValueError(f"Failed to parse account: {account}. Error: {str(e)}")
+                    raise ValueError(f"账户解析失败: {account}. 错误: {str(e)}")
 
     except Exception as e:
-        raise ValueError(f"Failed to process accounts file: {str(e)}")
+        raise ValueError(f"处理账户文件失败: {str(e)}")
 
 
 def validate_domains(accounts: List[Account], domains: Dict[str, str]) -> List[Account]:
@@ -109,7 +109,7 @@ def validate_domains(accounts: List[Account], domains: Dict[str, str]) -> List[A
         domain = account.email.split("@")[1]
         if domain not in domains:
             raise ValueError(
-                f"Domain '{domain}' is not supported, please add it to the config file"
+                f"不支持的域名 '{domain}'，请在配置文件中添加"
             )
         account.imap_server = domains[domain]
     return accounts
@@ -124,14 +124,14 @@ def load_config() -> Config:
         reverify_accounts = list(get_accounts("reverify.txt"))
 
         if not reg_accounts and not farm_accounts and not reverify_accounts:
-            raise ValueError("No accounts found in data files")
+            raise ValueError("在数据文件中未找到账户")
 
         config = Config(
             **params, accounts_to_farm=farm_accounts, accounts_to_register=reg_accounts, accounts_to_reverify=reverify_accounts
         )
 
         if config.redirect_settings.enabled and not config.redirect_settings.email and not config.redirect_settings.password and not config.redirect_settings.imap_server:
-            raise ValueError("Redirect email or password or imap server is missing")
+            raise ValueError("缺少重定向邮箱或密码或IMAP服务器")
 
         if reg_accounts:
             config.accounts_to_register = validate_domains(
@@ -144,12 +144,12 @@ def load_config() -> Config:
             )
 
         if config.captcha_module == "2captcha" and not config.two_captcha_api_key:
-            raise ValueError("2Captcha API key is missing")
+            raise ValueError("缺少2Captcha API密钥")
         elif config.captcha_module == "anticaptcha" and not config.anti_captcha_api_key:
-            raise ValueError("AntiCaptcha API key is missing")
+            raise ValueError("缺少AntiCaptcha API密钥")
 
         return config
 
     except Exception as exc:
-        logger.error(f"Failed to load config: {exc}")
+        logger.error(f"加载配置失败: {exc}")
         exit(1)
