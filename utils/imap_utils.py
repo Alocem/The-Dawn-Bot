@@ -95,7 +95,7 @@ class EmailValidator:
         self.password = password
 
     async def validate(self, proxy: Optional[Proxy] = None) -> OperationResult:
-        logger.info(f"Account: {self.email} | Checking if email is valid...")
+        logger.info(f"账户: {self.email} | 检查邮箱是否有效...")
 
         try:
             def login_sync():
@@ -110,20 +110,20 @@ class EmailValidator:
             return {
                 "status": True,
                 "identifier": self.email,
-                "data": f"Valid:{datetime.now()}"
+                "data": f"有效:{datetime.now()}"
             }
 
         except MailboxLoginError:
             return {
                 "status": False,
                 "identifier": self.email,
-                "data": "Invalid credentials"
+                "data": "无效的凭据"
             }
         except Exception as error:
             return {
                 "status": False,
                 "identifier": self.email,
-                "data": f"Validation failed: {str(error)}"
+                "data": f"验证失败: {str(error)}"
             }
 
 
@@ -158,7 +158,7 @@ class LinkExtractor:
         self.link_pattern = r"https://www\.aeropres\.in/chromeapi/dawn/v1/user/verifylink\?key=[a-f0-9-]+" if mode == "verify" else r"https://u31952478\.ct\.sendgrid\.net/ls/click\?upn=.+?(?=><button|\"|\s|$)"
 
     async def extract_link(self, proxy: Optional[Proxy] = None) -> OperationResult:
-        logger.info(f"Account: {self.email} | Checking email for link...")
+        logger.info(f"账户: {self.email} | 检查邮箱中的链接...")
 
         try:
             link = await self._search_with_retries(proxy)
@@ -166,8 +166,8 @@ class LinkExtractor:
                 return self._create_success_result(link)
 
             logger.warning(
-                f"Account: {self.email} | Link not found after {self.max_attempts} attempts, "
-                "searching in spam folder..."
+                f"账户: {self.email} | 在 {self.max_attempts} 次尝试后未找到链接，"
+                "正在搜索垃圾邮件文件夹..."
             )
 
             link = await self._search_spam_folders(proxy)
@@ -177,14 +177,14 @@ class LinkExtractor:
             return {
                 "status": False,
                 "identifier": self.email,
-                "data": "Link not found in any folder"
+                "data": "在任何文件夹中未找到链接"
             }
 
         except Exception as error:
             return {
                 "status": False,
                 "identifier": self.email,
-                "data": f"Link extraction failed: {str(error)}"
+                "data": f"链接提取失败: {str(error)}"
             }
 
     async def _search_messages(self, mailbox: MailBox) -> Optional[str]:
@@ -216,10 +216,10 @@ class LinkExtractor:
 
                 await asyncio.sleep(1)
             except Exception as e:
-                logger.error(f"Email {self.email} | Quick search attempt {attempt + 1} failed: {str(e)}")
+                logger.error(f"邮箱 {self.email} | 快速搜索尝试 {attempt + 1} 失败: {str(e)}")
                 await asyncio.sleep(1)
 
-        # Regular interval checks
+        # 定期检查
         for attempt in range(2, self.max_attempts):
             try:
                 link = await asyncio.to_thread(search_sync)
@@ -228,13 +228,13 @@ class LinkExtractor:
 
                 if attempt < self.max_attempts - 1:
                     logger.info(
-                        f"Account: {self.email} | Link not found. "
-                        f"Attempt {attempt + 1}/{self.max_attempts}. "
-                        f"Waiting {self.delay_seconds} seconds..."
+                        f"账户: {self.email} | 未找到链接。 "
+                        f"尝试 {attempt + 1}/{self.max_attempts}。 "
+                        f"等待 {self.delay_seconds} 秒..."
                     )
                     await asyncio.sleep(self.delay_seconds)
             except Exception as e:
-                logger.error(f"Email {self.email} | Search attempt {attempt + 1} failed: {str(e)}")
+                logger.error(f"邮箱 {self.email} | 搜索尝试 {attempt + 1} 失败: {str(e)}")
                 if attempt < self.max_attempts - 1:
                     await asyncio.sleep(self.delay_seconds)
 
