@@ -1,4 +1,4 @@
-# 🌅 黎明扩展机器人 [v1.6]
+# 🌅 Dawn扩展机器人 [v1.6]
 
 <div align="center">
   <img src="./console/images/console.png" alt="黎明扩展机器人控制台" width="600"/>
