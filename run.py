@@ -62,7 +62,7 @@ async def process_export_stats(bot: Bot) -> None:
 
 async def process_complete_tasks(bot: Bot) -> None:
     operation_result = await bot.process_complete_tasks()
-    await file_operations.export_result(operation_result, "完成任务")
+    await file_operations.export_result(operation_result, "完成任务（暂时失效）")
 
 
 async def run_module(
