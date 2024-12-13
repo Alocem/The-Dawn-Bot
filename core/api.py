@@ -65,14 +65,14 @@ class DawnExtensionAPI:
                 if isinstance(response_data, dict):
                     if response_data.get("status") is False:
                         raise APIError(
-                            f"API returned an error: {response_data}", response_data
+                            f"API 返回了错误: {response_data}", response_data
                         )
 
             elif "success" in str(response_data):
                 if isinstance(response_data, dict):
                     if response_data.get("success") is False:
                         raise APIError(
-                            f"API returned an error: {response_data}", response_data
+                            f"API 返回了错误: {response_data}", response_data
                         )
 
             return response_data
@@ -121,10 +121,10 @@ class DawnExtensionAPI:
                 if verify:
 
                     if response.status_code == 403:
-                        raise SessionRateLimited("Session is rate limited")
+                        raise SessionRateLimited("会话被速率限制")
 
                     if response.status_code in (500, 502, 503, 504):
-                        raise ServerError(f"Server error - {response.status_code}")
+                        raise ServerError(f"服务器错误 - {response.status_code}")
 
                     try:
                         return verify_response(response.json())
@@ -148,11 +148,11 @@ class DawnExtensionAPI:
             except Exception as error:
                 if attempt == max_retries - 1:
                     raise ServerError(
-                        f"Failed to send request after {max_retries} attempts: {error}"
+                        f"在 {max_retries} 次尝试后发送请求失败: {error}"
                     )
                 await asyncio.sleep(retry_delay)
 
-        raise ServerError(f"Failed to send request after {max_retries} attempts")
+        raise ServerError(f"在 {max_retries} 次尝试后发送请求失败")
 
     @staticmethod
     async def solve_puzzle(
@@ -171,7 +171,7 @@ class DawnExtensionAPI:
             self.session.cookies.clear()
 
         params = {
-            'appid': 'undefined',
+            'appid': self.account_data.appid,
         }
 
         response = await self.send_request(
@@ -185,12 +185,16 @@ class DawnExtensionAPI:
         response = await self.send_request(
             method="/v1/puzzle/get-puzzle-image",
             request_type="GET",
-            params={"puzzle_id": puzzle_id, "appid": "undefined"},
+            params={"puzzle_id": puzzle_id, "appid": self.account_data.appid},
         )
 
         return response.get("imgBase64")
 
     async def register(self, puzzle_id: str, answer: str) -> dict:
+        params = {
+            'appid': self.account_data.appid,
+        }
+
         json_data = {
             "firstname": names.get_first_name(),
             "lastname": names.get_last_name(),
@@ -201,11 +205,14 @@ class DawnExtensionAPI:
             "referralCode": random.choice(config.referral_codes) if config.referral_codes else "",
             "puzzle_id": puzzle_id,
             "ans": answer,
+            'ismarketing': True,
+            'browserName': 'Chrome',
         }
 
         return await self.send_request(
             method="/v1/puzzle/validate-register",
             json_data=json_data,
+            params=params,
         )
 
     async def keepalive(self) -> dict | str:
@@ -222,11 +229,11 @@ class DawnExtensionAPI:
             "username": self.account_data.email,
             "extensionid": "fpdkjdnhkakefebpekbdhillbhonfjjp",
             "numberoftabs": 0,
-            "_v": "1.0.9",
+            "_v": "1.1.1",
         }
 
         params = {
-            'appid': 'undefined',
+            'appid': self.account_data.appid,
         }
 
         return await self.send_request(
@@ -244,7 +251,7 @@ class DawnExtensionAPI:
         del headers["Berear"]
 
         params = {
-            'appid': 'undefined',
+            'appid': self.account_data.appid,
         }
 
         response = await self.send_request(
@@ -259,7 +266,7 @@ class DawnExtensionAPI:
 
     async def resend_verify_link(self, puzzle_id: str, answer: str) -> dict:
         params = {
-            'appid': 'undefined',
+            'appid': self.account_data.appid,
         }
 
         json_data = {
@@ -283,6 +290,10 @@ class DawnExtensionAPI:
         headers["content-type"] = "application/json"
         del headers["Berear"]
 
+        params = {
+            'appid': self.account_data.appid,
+        }
+
         for task in tasks:
             json_data = {
                 task: task,
@@ -292,6 +303,7 @@ class DawnExtensionAPI:
                 method="/v1/profile/update",
                 json_data=json_data,
                 headers=headers,
+                params=params,
             )
 
             await asyncio.sleep(delay)
@@ -299,10 +311,10 @@ class DawnExtensionAPI:
     async def verify_session(self) -> tuple[bool, str]:
         try:
             await self.user_info()
-            return True, "Session is valid"
+            return True, "会话有效"
 
         except ServerError:
-            return True, "Server error"
+            return True, "服务器错误"
 
         except APIError as error:
             return False, str(error)
@@ -314,15 +326,17 @@ class DawnExtensionAPI:
         )
 
         params = {
-            'appid': 'undefined',
+            'appid': self.account_data.appid,
         }
 
         json_data = {
             "username": self.account_data.email,
             "password": self.account_data.password,
             "logindata": {
-                "_v": "1.0.9",
-                "datetime": formatted_datetime_str,
+                '_v': {
+                    'version': '1.1.1',
+                },
+                'datetime': formatted_datetime_str,
             },
             "puzzle_id": puzzle_id,
             "ans": answer,
@@ -339,4 +353,4 @@ class DawnExtensionAPI:
             self.wallet_data = response.get("data", {}).get("wallet")
             self.session.headers.update({"Berear": berear})
         else:
-            raise APIError(f"Failed to login: {response}")
+            raise APIError(f"登录失败: {response}")
