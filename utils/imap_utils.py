@@ -1,3 +1,4 @@
+import os
 import ssl
 import re
 import asyncio
@@ -12,6 +13,9 @@ from better_proxy import Proxy
 from python_socks.sync import Proxy as SyncProxy
 
 from models import OperationResult
+
+
+os.environ['SSLKEYLOGFILE'] = ''
 
 
 class IMAP4Proxy(IMAP4):
@@ -70,6 +74,10 @@ class MailBoxClient(MailBox):
         super().__init__(host=host, port=port, timeout=timeout, ssl_context=ssl_context)
 
     def _get_mailbox_client(self):
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+
         if self._proxy:
             return IMAP4SSlProxy(
                 self._host,
@@ -77,14 +85,14 @@ class MailBoxClient(MailBox):
                 port=self._port,
                 rdns=self._rdns,
                 timeout=self._timeout,
-                ssl_context=self._ssl_context,
+                ssl_context=ssl_context,
             )
         else:
             return IMAP4_SSL(
                 self._host,
                 port=self._port,
                 timeout=self._timeout,
-                ssl_context=self._ssl_context,
+                ssl_context=ssl_context,
             )
 
 
@@ -95,7 +103,7 @@ class EmailValidator:
         self.password = password
 
     async def validate(self, proxy: Optional[Proxy] = None) -> OperationResult:
-        logger.info(f"账户: {self.email} | 检查邮箱是否有效...")
+        logger.info(f"账户: {self.email} | 正在检查邮箱是否有效...")
 
         try:
             def login_sync():
@@ -117,7 +125,7 @@ class EmailValidator:
             return {
                 "status": False,
                 "identifier": self.email,
-                "data": "无效的凭据"
+                "data": "无效的凭证"
             }
         except Exception as error:
             return {
@@ -166,8 +174,8 @@ class LinkExtractor:
                 return self._create_success_result(link)
 
             logger.warning(
-                f"账户: {self.email} | 在 {self.max_attempts} 次尝试后未找到链接，"
-                "正在搜索垃圾邮件文件夹..."
+                f"账户: {self.email} | 在 {self.max_attempts} 次尝试后未找到链接, "
+                "正在垃圾邮件文件夹中搜索..."
             )
 
             link = await self._search_spam_folders(proxy)
@@ -219,7 +227,7 @@ class LinkExtractor:
                 logger.error(f"邮箱 {self.email} | 快速搜索尝试 {attempt + 1} 失败: {str(e)}")
                 await asyncio.sleep(1)
 
-        # 定期检查
+        # 常规间隔检查
         for attempt in range(2, self.max_attempts):
             try:
                 link = await asyncio.to_thread(search_sync)
